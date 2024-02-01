@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 
 builder.Services.AddDbContext<HomeBankingContext>(options =>
-  options.UseSqlServer(builder.Configuration.GetConnectionString("HomeBankingContext")));
+  options.UseSqlServer(builder.Configuration.GetConnectionString("HomeBankingConnection")));
 
 var app = builder.Build();
 
