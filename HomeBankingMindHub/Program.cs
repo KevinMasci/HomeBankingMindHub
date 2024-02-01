@@ -1,7 +1,13 @@
+using HomeBankingMindHub.Models;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+
+builder.Services.AddDbContext<HomeBankingContext>(options =>
+  options.UseSqlServer(builder.Configuration.GetConnectionString("HomeBankingContext")));
 
 var app = builder.Build();
 
