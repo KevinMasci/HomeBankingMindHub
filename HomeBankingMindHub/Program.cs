@@ -1,4 +1,5 @@
 using HomeBankingMindHub.Models;
+using HomeBankingMindHub.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +10,9 @@ builder.Services.AddRazorPages();
 builder.Services.AddDbContext<HomeBankingContext>(options =>
   options.UseSqlServer(builder.Configuration.GetConnectionString("HomeBankingConnection")));
 
+
+builder.Services.AddScoped<IClientRepository, ClientRepository>();
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -18,7 +22,6 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     try
     {
-
         // En este paso buscamos un service que este con la clase HomeBankingContext
         var context = services.GetRequiredService<HomeBankingContext>();
         DBInitializer.Initialize(context);
@@ -42,5 +45,7 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapRazorPages();
+
+app.MapControllers();
 
 app.Run();
