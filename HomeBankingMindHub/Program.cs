@@ -1,15 +1,19 @@
 using HomeBankingMindHub.Models;
 using HomeBankingMindHub.Repositories;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddControllers();
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<HomeBankingContext>(options =>
   options.UseSqlServer(builder.Configuration.GetConnectionString("HomeBankingConnection")));
-
 
 builder.Services.AddScoped<IClientRepository, ClientRepository>();
 
@@ -34,9 +38,10 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error");
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 app.UseStaticFiles();
 
