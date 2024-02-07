@@ -31,12 +31,12 @@
                 </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="transaction in accountInfo.transactions" v-bind:class="[ transaction.type == 'CREDIT' ? 'credit-transaction' : 'debit-transaction' ]">
-                        <td>{{ transaction.id }}</td>
-                        <td>{{ transaction.description }}</td>
-                        <td>{{ formatDate(transaction.date) }}</td>
-                        <td>{{ transaction.amount }}</td>
-                    </tr>
+                <tr v-for="transaction in accountInfo.transactions" v-bind:class="[ transaction.type == 'CREDIT' ? 'credit-transaction' : 'debit-transaction' ]">
+                    <td>{{ transaction.id }}</td>
+                    <td>{{ transaction.description }}</td>
+                    <td>{{ formatDate(transaction.date) }}</td>
+                    <td>{{ transaction.amount }}</td>
+                </tr>
                 </tbody>
             </table>
         </div>
