@@ -66,8 +66,8 @@ namespace HomeBankingMindHub.Migrations
                     b.Property<string>("Color")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Cvv")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Cvv")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("FromDate")
                         .HasColumnType("datetime2");
