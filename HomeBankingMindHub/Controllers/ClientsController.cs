@@ -84,5 +84,32 @@ namespace HomeBankingMindHub.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+
+        [HttpPost]
+        public IActionResult Post([FromBody] ClientCreationDTO clientDTO)
+        {
+            try
+            {
+                if (clientDTO == null)
+                {
+                    return BadRequest("Los datos del cliente no pueden ser nulos");
+                }
+
+                var newClient = new Client
+                {
+                    FirstName = clientDTO.FirstName,
+                    LastName = clientDTO.LastName,
+                    Email = clientDTO.Email,
+                };
+
+                _clientRepository.Save(newClient);
+
+                return CreatedAtAction(nameof(Get), new { id = newClient.Id }, newClient);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
     }
 }
