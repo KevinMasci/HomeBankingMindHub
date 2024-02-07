@@ -21,7 +21,7 @@ namespace HomeBankingMindHub.Migrations
                     Type = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Color = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Number = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Cvv = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Cvv = table.Column<int>(type: "int", nullable: true),
                     FromDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ThruDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ClientId = table.Column<long>(type: "bigint", nullable: false)
