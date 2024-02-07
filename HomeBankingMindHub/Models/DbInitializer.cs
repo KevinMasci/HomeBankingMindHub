@@ -52,6 +52,11 @@
                     context.SaveChanges();
                 }
             }
+
+            if (!context.Loans.Any())
+            {
+
+            }
         }
     }
 }
