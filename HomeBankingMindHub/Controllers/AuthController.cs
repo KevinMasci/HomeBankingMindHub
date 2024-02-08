@@ -30,18 +30,8 @@ namespace HomeBankingMindHub.Controllers
                 }
 
                 Client user = _clientRepository.FindByEmail(login.Email);
-
-                // Verifica si el usuario existe
-                if (user == null)
-                {
-                    return NotFound("Usuario no encontrado.");
-                }
-
-                // Verifica si la contraseña es correcta
-                if (!String.Equals(user.Password, login.Password))
-                {
-                    return Unauthorized("Contraseña incorrecta.");
-                }
+                if (user == null || !String.Equals(user.Password, login.Password))
+                    return Unauthorized("Credenciales incorrectas");
 
                 var claims = new List<Claim>
                 {

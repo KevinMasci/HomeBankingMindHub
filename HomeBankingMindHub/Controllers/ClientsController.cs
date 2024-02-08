@@ -164,14 +164,14 @@ namespace HomeBankingMindHub.Controllers
                 string email = User.FindFirst("Client") != null ? User.FindFirst("Client").Value : string.Empty;
                 if (email == string.Empty)
                 {
-                    return Forbid();
+                    return NotFound("No se ha encontrado el cliente asociado al usuario actual.");
                 }
 
                 Client client = _clientRepository.FindByEmail(email);
 
                 if (client == null)
                 {
-                    return Forbid();
+                    return NotFound("No se ha encontrado el cliente asociado al usuario actual.");
                 }
 
                 var clientDTO = new ClientDTO
