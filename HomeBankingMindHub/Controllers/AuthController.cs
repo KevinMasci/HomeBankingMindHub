@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authentication;
 
 namespace HomeBankingMindHub.Controllers
 {
-    [Route("api/auth")]
+    [Route("api/[controller]")]
     [ApiController]
     public class AuthController : Controller
     {
@@ -19,12 +19,12 @@ namespace HomeBankingMindHub.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] Client client)
+        public async Task<IActionResult> Login([FromBody] LoginDTO login)
         {
             try
             {
-                Client user = _clientRepository.FindByEmail(client.Email);
-                if (user == null || !String.Equals(user.Password, client.Password))
+                Client user = _clientRepository.FindByEmail(login.Email);
+                if (user == null || !String.Equals(user.Password, login.Password))
                     return Unauthorized();
 
                 var claims = new List<Claim>
