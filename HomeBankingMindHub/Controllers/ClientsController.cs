@@ -124,25 +124,31 @@ namespace HomeBankingMindHub.Controllers
         }
 
         [HttpPost]
-        public IActionResult Post([FromBody] ClientCreationDTO clientDTO)
+        public IActionResult Post([FromBody] Client client)
         {
             try
             {
-                if (clientDTO == null)
+                if (String.IsNullOrEmpty(client.Email) || String.IsNullOrEmpty(client.Password) || String.IsNullOrEmpty(client.FirstName) || String.IsNullOrEmpty(client.LastName))
+                    return StatusCode(403, "datos inválidos");
+
+                Client user = _clientRepository.FindByEmail(client.Email);
+
+                if (user != null)
                 {
-                    return BadRequest("Los datos del cliente no pueden ser nulos");
+                    return StatusCode(403, "Email está en uso");
                 }
 
-                var newClient = new Client
+                Client newClient = new Client
                 {
-                    FirstName = clientDTO.FirstName,
-                    LastName = clientDTO.LastName,
-                    Email = clientDTO.Email,
+                    Email = client.Email,
+                    Password = client.Password,
+                    FirstName = client.FirstName,
+                    LastName = client.LastName,
                 };
 
                 _clientRepository.Save(newClient);
+                return Created("", newClient);
 
-                return CreatedAtAction(nameof(Get), new { id = newClient.Id }, newClient);
             }
             catch (Exception ex)
             {
