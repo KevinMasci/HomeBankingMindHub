@@ -55,7 +55,7 @@ namespace HomeBankingMindHub.Controllers
                 CookieAuthenticationDefaults.AuthenticationScheme);
                 return Ok();
             }
-            catch 
+            catch (Exception ex)
             {
                 return StatusCode(500, ex.Message);
             }
