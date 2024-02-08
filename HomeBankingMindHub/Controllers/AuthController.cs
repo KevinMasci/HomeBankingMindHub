@@ -23,9 +23,25 @@ namespace HomeBankingMindHub.Controllers
         {
             try
             {
+                // Verifica si se proporcionaron ambos campos obligatorios
+                if (string.IsNullOrEmpty(login.Email) || string.IsNullOrEmpty(login.Password))
+                {
+                    return BadRequest("Por favor, proporciona tanto el correo electrónico como la contraseña.");
+                }
+
                 Client user = _clientRepository.FindByEmail(login.Email);
-                if (user == null || !String.Equals(user.Password, login.Password))
-                    return Unauthorized();
+
+                // Verifica si el usuario existe
+                if (user == null)
+                {
+                    return NotFound("Usuario no encontrado.");
+                }
+
+                // Verifica si la contraseña es correcta
+                if (!String.Equals(user.Password, login.Password))
+                {
+                    return Unauthorized("Contraseña incorrecta.");
+                }
 
                 var claims = new List<Claim>
                 {
