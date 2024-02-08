@@ -34,5 +34,15 @@ namespace HomeBankingMindHub.Repositories
             Create(client);
             SaveChanges();
         }
+
+        public Client FindByEmail(string email)
+        {
+            return FindByCondition(client => client.Email == email)
+                .Include(client => client.Accounts)
+                .Include(client => client.ClientLoans)
+                    .ThenInclude(cl => cl.Loan)
+                .Include(client => client.Cards)
+                .FirstOrDefault();
+        }
     }
 }
