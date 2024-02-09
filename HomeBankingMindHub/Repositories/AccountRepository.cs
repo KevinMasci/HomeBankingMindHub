@@ -1,5 +1,6 @@
 ﻿using HomeBankingMindHub.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 
 namespace HomeBankingMindHub.Repositories
 {
@@ -33,6 +34,13 @@ namespace HomeBankingMindHub.Repositories
         { 
             return FindByCondition(account => account.ClientId == clientId)
                 .Include(account => account.Transactions).ToList();
+        }
+
+        public Account GetAccountByNumber(string accNumber)
+        {
+            return FindByCondition(account => accNumber == account.Number)
+                .Include(account => account.Transactions)
+                .FirstOrDefault();
         }
     }
 }

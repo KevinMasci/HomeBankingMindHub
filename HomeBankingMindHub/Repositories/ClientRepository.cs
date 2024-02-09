@@ -44,5 +44,6 @@ namespace HomeBankingMindHub.Repositories
                 .Include(client => client.Cards)
                 .FirstOrDefault();
         }
+
     }
 }
