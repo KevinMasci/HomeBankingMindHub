@@ -380,5 +380,32 @@ namespace HomeBankingMindHub.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+
+        [HttpGet("current/cards")]
+        public IActionResult GetCardsForCurrentClient()
+        {
+            try
+            {
+                // Obtener el cliente actual
+                var email = User.FindFirst("Client")?.Value;
+                if (string.IsNullOrEmpty(email))
+                {
+                    return Forbid();
+                }
+
+                Client client = _clientRepository.FindByEmail(email);
+
+                if (client == null)
+                {
+                    return Forbid();
+                }
+
+                return Ok(client.Cards);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
     }
 }
