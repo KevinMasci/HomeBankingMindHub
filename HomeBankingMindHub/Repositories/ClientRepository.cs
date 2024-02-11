@@ -9,23 +9,23 @@ namespace HomeBankingMindHub.Repositories
         {
         }
 
+        public IQueryable<Client> IncludeMethod(IQueryable<Client> query) 
+        {
+            return query.Include(client => client.Accounts)
+                        .Include(client => client.ClientLoans)
+                            .ThenInclude(cl => cl.Loan)
+                        .Include(client => client.Cards);
+        }
+
         public Client FindById(long id)
         {
-            return FindByCondition(client => client.Id == id)
-                .Include(client => client.Accounts)
-                .Include(client => client.ClientLoans)
-                    .ThenInclude(cl => cl.Loan)
-                .Include(client => client.Cards)
+            return IncludeMethod(FindByCondition(client => client.Id == id))
                 .FirstOrDefault();
         }
 
         public IEnumerable<Client> GetAllClients()
         {
-            return FindAll()
-                .Include(client => client.Accounts)
-                .Include(client => client.ClientLoans)
-                    .ThenInclude(cl => cl.Loan)
-                .Include(client => client.Cards)
+            return IncludeMethod(FindAll())
                 .ToList();
         }
 
@@ -37,11 +37,7 @@ namespace HomeBankingMindHub.Repositories
 
         public Client FindByEmail(string email)
         {
-            return FindByCondition(client => client.Email.ToUpper() == email.ToUpper())
-                .Include(client => client.Accounts)
-                .Include(client => client.ClientLoans)
-                    .ThenInclude(cl => cl.Loan)
-                .Include(client => client.Cards)
+            return IncludeMethod(FindByCondition(client => client.Email.ToUpper() == email.ToUpper()))
                 .FirstOrDefault();
         }
     }
