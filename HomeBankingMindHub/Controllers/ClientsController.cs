@@ -321,13 +321,14 @@ namespace HomeBankingMindHub.Controllers
             }
         }
 
-        [HttpGet("current")]
-        public IActionResult GetCurrent()
+        [HttpPost("current/cards")]
+        public IActionResult CreateCardForCurrentClient([FromBody] CardCreateDTO cardDTO)
         {
             try
             {
-                string email = User.FindFirst("Client") != null ? User.FindFirst("Client").Value : string.Empty;
-                if (email == string.Empty)
+                // Obtener el cliente actual
+                var email = User.FindFirst("Client")?.Value;
+                if (string.IsNullOrEmpty(email))
                 {
                     return Forbid();
                 }
@@ -339,45 +340,39 @@ namespace HomeBankingMindHub.Controllers
                     return Forbid();
                 }
 
-                var clientDTO = new ClientDTO
+                // Verificar si el cliente ya tiene 3 tarjetas registradas
+                if (client.Cards.Count() >= 3)
                 {
-                    Id = client.Id,
-                    Email = client.Email,
-                    FirstName = client.FirstName,
-                    LastName = client.LastName,
-                    Accounts = client.Accounts.Select(ac => new AccountDTO
-                    {
-                        Id = ac.Id,
-                        Balance = ac.Balance,
-                        CreationDate = ac.CreationDate,
-                        Number = ac.Number
-                    }).ToList(),
-                    Credits = client.ClientLoans.Select(cl => new ClientLoanDTO
-                    {
-                        Id = cl.Id,
-                        LoanId = cl.LoanId,
-                        Name = cl.Loan.Name,
-                        Amount = cl.Amount,
-                        Payments = int.Parse(cl.Payments)
-                    }).ToList(),
-                    Cards = client.Cards.Select(c => new CardDTO
-                    {
-                        Id = c.Id,
-                        CardHolder = c.CardHolder,
-                        Color = c.Color,
-                        Cvv = c.Cvv,
-                        FromDate = c.FromDate,
-                        Number = c.Number,
-                        ThruDate = c.ThruDate,
-                        Type = c.Type
-                    }).ToList()
+                    return StatusCode(403, "El cliente ya tiene 3 tarjetas, no se puede crear más.");
+                }
+
+                // Generar un numero de tarjeta y verificar que no exista
+                string cardNumber;
+
+                do
+                {
+                    cardNumber = CardNumberGenerator.GenerateCardNumber();
+                } while (_cardRepository.FindByNumber(cardNumber) != null);
+
+                var newCard = new Card
+                {
+                    ClientId = client.Id,
+                    CardHolder = client.FirstName + " " + client.LastName,
+                    Type = Enum.Parse<CardType>(cardDTO.Type),
+                    Color = Enum.Parse<CardColor>(cardDTO.Color),
+                    Number = cardNumber,
+                    Cvv = CardNumberGenerator.GenerateCvv(),
+                    FromDate = DateTime.Now,
+                    ThruDate = DateTime.Now.AddYears(4),
                 };
 
-                return Ok(clientDTO);
+                _cardRepository.Save(newCard);
+
+                return StatusCode(201, "Card created successfully.");
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return StatusCode(500, $"Error creating card: {ex.Message}");
             }
         }
 
