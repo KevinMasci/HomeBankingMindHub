@@ -4,14 +4,13 @@ namespace HomeBankingMindHub.Models
 {
     static class DBInitializer
     {
-        private static readonly PasswordHasher _passwordHasher = new PasswordHasher();
         public static void Initialize(HomeBankingContext context)
         {
             if(!context.Clients.Any())
             {
                 var clients = new Client[]
                 {
-                    new Client {Email = "vcoronado@gmail.com", FirstName="Victor", LastName="Coronado", Password = _passwordHasher.HashPassword("123456")}
+                    new Client {Email = "vcoronado@gmail.com", FirstName="Victor", LastName="Coronado", Password = PasswordHasher.HashPassword("123456")}
                 };
                 context.Clients.AddRange(clients);
                 context.SaveChanges();

@@ -149,7 +149,7 @@ namespace HomeBankingMindHub.Controllers
                 Client newClient = new Client
                 {
                     Email = client.Email,
-                    Password = client.Password,
+                    Password = PasswordHasher.HashPassword(client.Password),
                     FirstName = client.FirstName,
                     LastName = client.LastName,
                 };
