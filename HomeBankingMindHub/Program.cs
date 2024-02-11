@@ -1,5 +1,6 @@
 using HomeBankingMindHub.Models;
 using HomeBankingMindHub.Repositories;
+using HomeBankingMindHub.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
@@ -13,12 +14,18 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Add Context
 builder.Services.AddDbContext<HomeBankingContext>(options =>
   options.UseSqlServer(builder.Configuration.GetConnectionString("HomeBankingConnection")));
 
+// Add Repositories
 builder.Services.AddScoped<IClientRepository, ClientRepository>();
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<ICardRepository, CardRepository>();
+
+// Add Services
+builder.Services.AddScoped<IClientService, ClientService>();
+builder.Services.AddScoped<IAccountService, AccountService>();
 
 builder.Services.AddControllers().AddJsonOptions(x =>
 x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
@@ -64,21 +71,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 app.UseStaticFiles();
-
-app.UseRouting();
-
-app.UseAuthentication();
-
-app.UseAuthorization();
-
-app.MapControllers();
-
 app.UseDefaultFiles();
-
-app.UseStaticFiles();
-
-app.MapRazorPages();
-
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
-
+app.MapRazorPages();
+app.MapControllers();
 app.Run();

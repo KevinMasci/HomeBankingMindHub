@@ -1,5 +1,6 @@
 ﻿using HomeBankingMindHub.Models;
 using HomeBankingMindHub.Repositories;
+using HomeBankingMindHub.Services;
 using HomeBankingMindHub.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -13,14 +14,14 @@ namespace HomeBankingMindHub.Controllers
     [ApiController]
     public class ClientsController : ControllerBase
     {
-        private IClientRepository _clientRepository;
-        private IAccountRepository _accountRepository;
+        private IClientService _clientService;
+        private IAccountService _accountService;
         private ICardRepository _cardRepository;
 
-        public ClientsController(IClientRepository clientRepository, IAccountRepository accountRepository, ICardRepository cardRepository)
+        public ClientsController(IClientService clientService, IAccountService accountService, ICardRepository cardRepository)
         {
-            _clientRepository = clientRepository;
-            _accountRepository = accountRepository;
+            _clientService = clientService;
+            _accountService = accountService;
             _cardRepository = cardRepository;
         }
 
@@ -29,7 +30,7 @@ namespace HomeBankingMindHub.Controllers
         {
             try
             {
-                var clients = _clientRepository.GetAllClients();
+                var clients = _clientService.GetAllClients();
                 var clientsDTO = new List<ClientDTO>();
 
                 foreach (Client client in clients)
@@ -83,7 +84,7 @@ namespace HomeBankingMindHub.Controllers
         {
             try
             {
-                var client = _clientRepository.FindById(id);
+                var client = _clientService.FindById(id);
 
                 if (client == null)
                 {
@@ -139,7 +140,7 @@ namespace HomeBankingMindHub.Controllers
                 if (String.IsNullOrEmpty(client.Email) || String.IsNullOrEmpty(client.Password) || String.IsNullOrEmpty(client.FirstName) || String.IsNullOrEmpty(client.LastName))
                     return StatusCode(403, "datos inválidos");
 
-                Client user = _clientRepository.FindByEmail(client.Email);
+                Client user = _clientService.FindByEmail(client.Email);
 
                 if (user != null)
                 {
@@ -154,7 +155,7 @@ namespace HomeBankingMindHub.Controllers
                     LastName = client.LastName,
                 };
 
-                _clientRepository.Save(newClient);
+                _clientService.Save(newClient);
                 return Created("", newClient);
 
             }
@@ -175,7 +176,7 @@ namespace HomeBankingMindHub.Controllers
                     return NotFound("No se ha encontrado el cliente asociado al usuario actual.");
                 }
 
-                Client client = _clientRepository.FindByEmail(email);
+                Client client = _clientService.FindByEmail(email);
 
                 if (client == null)
                 {
@@ -236,7 +237,7 @@ namespace HomeBankingMindHub.Controllers
                     return Forbid();
                 }
 
-                Client client = _clientRepository.FindByEmail(email);
+                Client client = _clientService.FindByEmail(email);
 
                 if (client == null)
                 {
@@ -244,7 +245,7 @@ namespace HomeBankingMindHub.Controllers
                 }
 
                 // Verificar si el cliente ya tiene 3 cuentas registradas
-                if (_accountRepository.GetAccountsByClient(client.Id).Count() >= 3)
+                if (_accountService.GetAccountsByClient(client.Id).Count() >= 3)
                 {
                     return StatusCode(403, "El cliente ya tiene 3 cuentas registradas, no se puede crear más.");
                 }
@@ -257,7 +258,7 @@ namespace HomeBankingMindHub.Controllers
                 do
                 {
                     accountNumber = "VIN-" + random.Next(100, 99999999).ToString();
-                } while (_accountRepository.GetAccountByNumber(accountNumber) != null);
+                } while (_accountService.GetAccountByNumber(accountNumber) != null);
 
                 var account = new Account
                 {
@@ -267,7 +268,7 @@ namespace HomeBankingMindHub.Controllers
                     CreationDate = DateTime.Now,
                 };
 
-                _accountRepository.Save(account);
+                _accountService.Save(account);
                 return Ok(account);
             }
             catch (Exception ex)
@@ -288,7 +289,7 @@ namespace HomeBankingMindHub.Controllers
                     return Forbid();
                 }
 
-                Client client = _clientRepository.FindByEmail(email);
+                Client client = _clientService.FindByEmail(email);
 
                 if (client == null)
                 {
@@ -296,7 +297,7 @@ namespace HomeBankingMindHub.Controllers
                 }
 
                 // Obtener cuentas del cliente
-                var accounts = _accountRepository.GetAccountsByClient(client.Id);
+                var accounts = _accountService.GetAccountsByClient(client.Id);
                 var accountsDTO = accounts.Select(account => new AccountDTO
                 {
                     Id = account.Id,
@@ -333,7 +334,7 @@ namespace HomeBankingMindHub.Controllers
                     return Forbid();
                 }
 
-                Client client = _clientRepository.FindByEmail(email);
+                Client client = _clientService.FindByEmail(email);
 
                 if (client == null)
                 {
@@ -388,7 +389,7 @@ namespace HomeBankingMindHub.Controllers
                     return Forbid();
                 }
 
-                Client client = _clientRepository.FindByEmail(email);
+                Client client = _clientService.FindByEmail(email);
 
                 if (client == null)
                 {
