@@ -13,12 +13,10 @@ namespace HomeBankingMindHub.Controllers
     public class AuthController : Controller
     {
         private IClientRepository _clientRepository;
-        private PasswordHasher _passwordHasher;
 
         public AuthController(IClientRepository clientRepository)
         {
             _clientRepository = clientRepository;
-            _passwordHasher = new PasswordHasher();
         }
 
         [HttpPost("login")]
@@ -34,7 +32,7 @@ namespace HomeBankingMindHub.Controllers
 
                 Client user = _clientRepository.FindByEmail(login.Email);
 
-                if (user == null || !_passwordHasher.VerifyPassword(login.Password, user.Password))
+                if (user == null || !PasswordHasher.VerifyPassword(login.Password, user.Password))
                 {
                     return Unauthorized("Credenciales incorrectas");
                 }

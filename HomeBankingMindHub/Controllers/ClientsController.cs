@@ -150,12 +150,14 @@ namespace HomeBankingMindHub.Controllers
                 Client newClient = new Client
                 {
                     Email = client.Email,
-                    Password = client.Password,
+                    Password = PasswordHasher.HashPassword(client.Password),
                     FirstName = client.FirstName,
                     LastName = client.LastName,
                 };
 
                 _clientService.Save(newClient);
+                // Crear automáticamente una cuenta para el nuevo cliente
+                CreateAccountForClient(newClient.Id);
                 return Created("", newClient);
 
             }
@@ -250,31 +252,36 @@ namespace HomeBankingMindHub.Controllers
                     return StatusCode(403, "El cliente ya tiene 3 cuentas registradas, no se puede crear más.");
                 }
 
-                // Crear la cuenta
-                var random = new Random();
-                string accountNumber;
-
-                // Validar que el número de cuenta no exista previamente
-                do
-                {
-                    accountNumber = "VIN-" + random.Next(100, 99999999).ToString();
-                } while (_accountService.GetAccountByNumber(accountNumber) != null);
-
-                var account = new Account
-                {
-                    ClientId = client.Id,
-                    Number = accountNumber,
-                    Balance = 0,
-                    CreationDate = DateTime.Now,
-                };
-
-                _accountService.Save(account);
-                return Ok(account);
+                CreateAccountForClient(client.Id);
+                return Ok();
             }
             catch (Exception ex)
             {
                 return StatusCode(500, ex.Message);
             }
+        }
+
+        // Metodo para crear una cuenta a un usuario dado su Id
+        private void CreateAccountForClient(long clientId)
+        {
+            var random = new Random();
+            string accountNumber;
+
+            // Validar que el número de cuenta no exista previamente
+            do
+            {
+                accountNumber = "VIN-" + random.Next(100, 99999999).ToString();
+            } while (_accountService.GetAccountByNumber(accountNumber) != null);
+
+            var account = new Account
+            {
+                ClientId = clientId,
+                Number = accountNumber,
+                Balance = 0,
+                CreationDate = DateTime.Now,
+            };
+
+            _accountService.Save(account);
         }
 
         [HttpGet("current/accounts")]
