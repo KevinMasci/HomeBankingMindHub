@@ -132,13 +132,13 @@ namespace HomeBankingMindHub.Controllers
         }
 
         [HttpPost]
-        public IActionResult Post([FromBody] Client client)
+        public IActionResult Post([FromBody] SignupDTO client)
         {
             try
             {
                 if (String.IsNullOrEmpty(client.Email) || String.IsNullOrEmpty(client.Password) || String.IsNullOrEmpty(client.FirstName) || String.IsNullOrEmpty(client.LastName))
                     return StatusCode(403, "datos inválidos");
-
+                
                 Client user = _clientRepository.FindByEmail(client.Email);
 
                 if (user != null)
