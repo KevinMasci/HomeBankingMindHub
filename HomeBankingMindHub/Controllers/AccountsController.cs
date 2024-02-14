@@ -1,5 +1,6 @@
 ﻿using HomeBankingMindHub.Models;
 using HomeBankingMindHub.Repositories;
+using HomeBankingMindHub.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,13 +10,11 @@ namespace HomeBankingMindHub.Controllers
     [ApiController]
     public class AccountsController : Controller
     {
-        private IAccountRepository _accountRepository;
-        private IClientRepository _clientRepository;
+        private IAccountService _accountService;
 
-        public AccountsController(IAccountRepository accountRepository, IClientRepository clientRepository)
+        public AccountsController(IAccountService accountService)
         {
-            _accountRepository = accountRepository;
-            _clientRepository = clientRepository;
+            _accountService = accountService;
         }
 
         [HttpGet]
@@ -23,28 +22,10 @@ namespace HomeBankingMindHub.Controllers
         {
             try
             {
-                var accounts = _accountRepository.GetAllAccounts();
-                var accountsDTO = new List<AccountDTO>();
-
-                foreach (Account account in accounts)
+                var accountsDTO = _accountService.GetAllAccounts();
+                if (accountsDTO == null)
                 {
-                    var newAccountDTO = new AccountDTO
-                    {
-                        Id = account.Id,
-                        Number = account.Number,
-                        CreationDate = account.CreationDate,
-                        Balance = account.Balance,
-                        Transactions = account.Transactions.Select(tr => new TransactionDTO
-                        {
-                            Id = tr.Id,
-                            Type = tr.Type.ToString(),
-                            Amount = tr.Amount,
-                            Description = tr.Description,
-                            Date = tr.Date,
-                        }).ToList()
-                    };
-
-                    accountsDTO.Add(newAccountDTO);
+                    return Forbid();
                 }
                 return Ok(accountsDTO);
             }
@@ -59,29 +40,13 @@ namespace HomeBankingMindHub.Controllers
         {
             try
             {
-                var account = _accountRepository.FindById(id);
+                var account = _accountService.FindById(id);
 
                 if (account == null)
                 {
                     return Forbid();
                 }
-
-                var accountDTO = new AccountDTO
-                {
-                    Id = account.Id,
-                    Number = account.Number,
-                    CreationDate = account.CreationDate,
-                    Balance = account.Balance,
-                    Transactions = account.Transactions.Select(tr => new TransactionDTO
-                    {
-                        Id = tr.Id,
-                        Type = tr.Type.ToString(),
-                        Amount = tr.Amount,
-                        Description = tr.Description,
-                        Date = tr.Date,
-                    }).ToList()
-                };
-                return Ok(accountDTO);
+                return Ok(account);
             }
             catch (Exception ex)
             {
