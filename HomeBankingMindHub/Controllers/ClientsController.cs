@@ -30,47 +30,7 @@ namespace HomeBankingMindHub.Controllers
         {
             try
             {
-                var clients = _clientService.GetAllClients();
-                var clientsDTO = new List<ClientDTO>();
-
-                foreach (Client client in clients)
-                {
-                    var newClientDTO = new ClientDTO
-                    {
-                        Id = client.Id,
-                        Email = client.Email,
-                        FirstName = client.FirstName,
-                        LastName = client.LastName,
-                        Accounts = client.Accounts.Select(ac => new AccountDTO
-                        {
-                            Id = ac.Id,
-                            Balance = ac.Balance,
-                            CreationDate = ac.CreationDate,
-                            Number = ac.Number
-                        }).ToList(),
-                        Credits = client.ClientLoans.Select(cl => new ClientLoanDTO
-                        {
-                            Id = cl.Id,
-                            LoanId = cl.LoanId,
-                            Name = cl.Loan.Name,
-                            Amount = cl.Amount,
-                            Payments = int.Parse(cl.Payments)
-                        }).ToList(),
-                        Cards = client.Cards.Select(c => new CardDTO
-                        {
-                            Id = c.Id,
-                            CardHolder = c.CardHolder,
-                            Color = c.Color.ToString(),
-                            Cvv = c.Cvv,
-                            FromDate = c.FromDate,
-                            Number = c.Number,
-                            ThruDate = c.ThruDate,
-                            Type = c.Type.ToString(),
-                        }).ToList()
-                    };
-
-                    clientsDTO.Add(newClientDTO);
-                }
+                var clientsDTO = _clientService.GetAllClients();
                 return Ok(clientsDTO);
             }
             catch (Exception ex)
@@ -84,46 +44,13 @@ namespace HomeBankingMindHub.Controllers
         {
             try
             {
-                var client = _clientService.FindById(id);
+                var clientDTO = _clientService.FindById(id);
 
-                if (client == null)
+                if (clientDTO == null)
                 {
                     return Forbid();
                 }
 
-                var clientDTO = new ClientDTO
-                {
-                    Id = client.Id,
-                    Email = client.Email,
-                    FirstName = client.FirstName,
-                    LastName = client.LastName,
-                    Accounts = client.Accounts.Select(ac => new AccountDTO
-                    {
-                        Id = ac.Id,
-                        Balance = ac.Balance,
-                        CreationDate = ac.CreationDate,
-                        Number = ac.Number
-                    }).ToList(),
-                    Credits = client.ClientLoans.Select(cl => new ClientLoanDTO
-                    {
-                        Id = cl.Id,
-                        LoanId = cl.LoanId,
-                        Name = cl.Loan.Name,
-                        Amount = cl.Amount,
-                        Payments = int.Parse(cl.Payments)
-                    }).ToList(),
-                    Cards = client.Cards.Select(c => new CardDTO
-                    {
-                        Id = c.Id,
-                        CardHolder = c.CardHolder,
-                        Color = c.Color.ToString(),
-                        Cvv = c.Cvv,
-                        FromDate = c.FromDate,
-                        Number = c.Number,
-                        ThruDate = c.ThruDate,
-                        Type = c.Type.ToString(),
-                    }).ToList()
-                };
                 return Ok(clientDTO);
             }
             catch (Exception ex)
@@ -348,10 +275,11 @@ namespace HomeBankingMindHub.Controllers
                     return Forbid();
                 }
 
-                // Verificar si el cliente ya tiene 3 cuentas registradas
-                if (client.Cards.Count() >= 3)
+                // Verificar si el cliente ya tiene 3 tarjetas del tipo seleccionado
+                var cardType = Enum.Parse<CardType>(cardDTO.Type);
+                if (client.Cards.Count(c => c.Type == cardType) >= 3)
                 {
-                    return StatusCode(403, "El cliente ya tiene 3 tarjetas, no se puede crear más.");
+                    return StatusCode(403, "El cliente ya tiene 3 tarjetas de ese tipo");
                 }
 
                 // Generar un numero de tarjeta y verificar que no exista
@@ -380,7 +308,7 @@ namespace HomeBankingMindHub.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error creating card: {ex.Message}");
+                return StatusCode(500, ex.Message);
             }
         }
 
