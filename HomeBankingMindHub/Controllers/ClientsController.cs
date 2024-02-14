@@ -15,14 +15,10 @@ namespace HomeBankingMindHub.Controllers
     public class ClientsController : ControllerBase
     {
         private IClientService _clientService;
-        private IAccountService _accountService;
-        private ICardRepository _cardRepository;
 
-        public ClientsController(IClientService clientService, IAccountService accountService, ICardRepository cardRepository)
+        public ClientsController(IClientService clientService)
         {
             _clientService = clientService;
-            _accountService = accountService;
-            _cardRepository = cardRepository;
         }
 
         [HttpGet]
@@ -64,29 +60,17 @@ namespace HomeBankingMindHub.Controllers
         {
             try
             {
-                if (String.IsNullOrEmpty(client.Email) || String.IsNullOrEmpty(client.Password) || String.IsNullOrEmpty(client.FirstName) || String.IsNullOrEmpty(client.LastName))
-                    return StatusCode(403, "datos inválidos");
+                Client newClient = _clientService.RegisterNewClient(client);
 
-                Client user = _clientService.FindByEmail(client.Email);
-
-                if (user != null)
-                {
-                    return StatusCode(403, "Email está en uso");
-                }
-
-                Client newClient = new Client
-                {
-                    Email = client.Email,
-                    Password = PasswordHasher.HashPassword(client.Password),
-                    FirstName = client.FirstName,
-                    LastName = client.LastName,
-                };
-
-                _clientService.Save(newClient);
-                // Crear automáticamente una cuenta para el nuevo cliente
-                CreateAccountForClient(newClient.Id);
                 return Created("", newClient);
-
+            }
+            catch (ArgumentException ex)
+            {
+                return StatusCode(403, ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return StatusCode(403, ex.Message);
             }
             catch (Exception ex)
             {
@@ -105,46 +89,12 @@ namespace HomeBankingMindHub.Controllers
                     return NotFound("No se ha encontrado el cliente asociado al usuario actual.");
                 }
 
-                Client client = _clientService.FindByEmail(email);
+                ClientDTO clientDTO = _clientService.FindByEmail(email);
 
-                if (client == null)
+                if (clientDTO == null)
                 {
                     return NotFound("No se ha encontrado el cliente asociado al usuario actual.");
                 }
-
-                var clientDTO = new ClientDTO
-                {
-                    Id = client.Id,
-                    Email = client.Email,
-                    FirstName = client.FirstName,
-                    LastName = client.LastName,
-                    Accounts = client.Accounts.Select(ac => new AccountDTO
-                    {
-                        Id = ac.Id,
-                        Balance = ac.Balance,
-                        CreationDate = ac.CreationDate,
-                        Number = ac.Number
-                    }).ToList(),
-                    Credits = client.ClientLoans.Select(cl => new ClientLoanDTO
-                    {
-                        Id = cl.Id,
-                        LoanId = cl.LoanId,
-                        Name = cl.Loan.Name,
-                        Amount = cl.Amount,
-                        Payments = int.Parse(cl.Payments)
-                    }).ToList(),
-                    Cards = client.Cards.Select(c => new CardDTO
-                    {
-                        Id = c.Id,
-                        CardHolder = c.CardHolder,
-                        Color = c.Color.ToString(),
-                        Cvv = c.Cvv,
-                        FromDate = c.FromDate,
-                        Number = c.Number,
-                        ThruDate = c.ThruDate,
-                        Type = c.Type.ToString()
-                    }).ToList()
-                };
 
                 return Ok(clientDTO);
             }
@@ -166,49 +116,20 @@ namespace HomeBankingMindHub.Controllers
                     return Forbid();
                 }
 
-                Client client = _clientService.FindByEmail(email);
+                ClientDTO client = _clientService.FindByEmail(email);
 
                 if (client == null)
                 {
-                    return Forbid();
+                    return NotFound("No se ha encontrado el cliente asociado al usuario actual.");
                 }
 
-                // Verificar si el cliente ya tiene 3 cuentas registradas
-                if (_accountService.GetAccountsByClient(client.Id).Count() >= 3)
-                {
-                    return StatusCode(403, "El cliente ya tiene 3 cuentas registradas, no se puede crear más.");
-                }
-
-                CreateAccountForClient(client.Id);
+                _clientService.CreateAccountForClient(client.Id);
                 return Ok();
             }
             catch (Exception ex)
             {
                 return StatusCode(500, ex.Message);
             }
-        }
-
-        // Metodo para crear una cuenta a un usuario dado su Id
-        private void CreateAccountForClient(long clientId)
-        {
-            var random = new Random();
-            string accountNumber;
-
-            // Validar que el número de cuenta no exista previamente
-            do
-            {
-                accountNumber = "VIN-" + random.Next(100, 99999999).ToString();
-            } while (_accountService.GetAccountByNumber(accountNumber) != null);
-
-            var account = new Account
-            {
-                ClientId = clientId,
-                Number = accountNumber,
-                Balance = 0,
-                CreationDate = DateTime.Now,
-            };
-
-            _accountService.Save(account);
         }
 
         [HttpGet("current/accounts")]
@@ -223,30 +144,14 @@ namespace HomeBankingMindHub.Controllers
                     return Forbid();
                 }
 
-                Client client = _clientService.FindByEmail(email);
+                ClientDTO client = _clientService.FindByEmail(email);
 
                 if (client == null)
                 {
-                    return Forbid();
+                    return NotFound("No se ha encontrado el cliente asociado al usuario actual.");
                 }
 
-                // Obtener cuentas del cliente
-                var accounts = _accountService.GetAccountsByClient(client.Id);
-                var accountsDTO = accounts.Select(account => new AccountDTO
-                {
-                    Id = account.Id,
-                    Number = account.Number,
-                    CreationDate = account.CreationDate,
-                    Balance = account.Balance,
-                    Transactions = account.Transactions.Select(tr => new TransactionDTO
-                    {
-                        Id = tr.Id,
-                        Type = tr.Type.ToString(),
-                        Amount = tr.Amount,
-                        Description = tr.Description,
-                        Date = tr.Date,
-                    }).ToList()
-                }).ToList();
+                var accountsDTO = _clientService.GetAccountsByCurrentClient(client.Id);
 
                 return Ok(accountsDTO);
             }
@@ -268,41 +173,21 @@ namespace HomeBankingMindHub.Controllers
                     return Forbid();
                 }
 
-                Client client = _clientService.FindByEmail(email);
+                ClientDTO client = _clientService.FindByEmail(email);
 
                 if (client == null)
                 {
-                    return Forbid();
+                    return NotFound("Client not found.");
                 }
 
                 // Verificar si el cliente ya tiene 3 tarjetas del tipo seleccionado
-                var cardType = Enum.Parse<CardType>(cardDTO.Type);
+                var cardType = cardDTO.Type;
                 if (client.Cards.Count(c => c.Type == cardType) >= 3)
                 {
-                    return StatusCode(403, "El cliente ya tiene 3 tarjetas de ese tipo");
+                    return StatusCode(403, "Client already has 3 cards of that type");
                 }
 
-                // Generar un numero de tarjeta y verificar que no exista
-                string cardNumber;
-
-                do
-                {
-                    cardNumber = CardNumberGenerator.GenerateCardNumber();
-                } while (_cardRepository.FindByNumber(cardNumber) != null);
-
-                var newCard = new Card
-                {
-                    ClientId = client.Id,
-                    CardHolder = client.FirstName + " " + client.LastName,
-                    Type = Enum.Parse<CardType>(cardDTO.Type),
-                    Color = Enum.Parse<CardColor>(cardDTO.Color),
-                    Number = cardNumber,
-                    Cvv = CardNumberGenerator.GenerateCvv(),
-                    FromDate = DateTime.Now,
-                    ThruDate = DateTime.Now.AddYears(4),
-                };
-
-                _cardRepository.Save(newCard);
+                _clientService.CreateCardForCurrentClient(client, cardDTO);
 
                 return StatusCode(201, "Card created successfully.");
             }
@@ -324,7 +209,7 @@ namespace HomeBankingMindHub.Controllers
                     return Forbid();
                 }
 
-                Client client = _clientService.FindByEmail(email);
+                ClientDTO client = _clientService.FindByEmail(email);
 
                 if (client == null)
                 {
