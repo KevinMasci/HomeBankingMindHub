@@ -1,6 +1,7 @@
 ﻿using HomeBankingMindHub.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace HomeBankingMindHub.Repositories
 {
@@ -26,7 +27,15 @@ namespace HomeBankingMindHub.Repositories
 
         public void Save(Account account) 
         {
-            Create(account);
+            if (account.Id == 0)
+            {
+                Create(account);
+            }
+            else
+            {
+                Update(account);
+            }
+
             SaveChanges();
         }
 
@@ -36,9 +45,9 @@ namespace HomeBankingMindHub.Repositories
                 .Include(account => account.Transactions).ToList();
         }
 
-        public Account GetAccountByNumber(string accNumber)
+        public Account GetAccountByNumber(string number)
         {
-            return FindByCondition(account => accNumber == account.Number)
+            return FindByCondition(account => account.Number.ToUpper() == number.ToUpper())
                 .Include(account => account.Transactions)
                 .FirstOrDefault();
         }
