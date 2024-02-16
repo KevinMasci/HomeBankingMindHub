@@ -38,9 +38,14 @@ namespace HomeBankingMindHub.Services
                     return new ObjectResult("No se permite la transferencia a la misma cuenta.") { StatusCode = 403};
                 }
 
-                if (transferDTO.Amount == 0 || transferDTO.Description == string.Empty)
+                if (transferDTO.Amount <= 0 || transferDTO.Amount < 0.001)
                 {
-                    return new ObjectResult("Monto o descripción no proporcionados.") { StatusCode = 403 };
+                    return new ObjectResult("Monto no valido.") { StatusCode = 403 };
+                }
+
+                if (transferDTO.Description == string.Empty)
+                {
+                    return new ObjectResult("Descripcion no proporcionada.") { StatusCode = 403 };
                 }
 
                 //buscamos las cuentas
@@ -99,7 +104,6 @@ namespace HomeBankingMindHub.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString()); // Imprimir la excepción completa en la consola.
                 return new ObjectResult($"Error interno del servidor: {ex.Message}") { StatusCode = 500 };
             }
         }
