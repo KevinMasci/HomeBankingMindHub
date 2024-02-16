@@ -180,11 +180,20 @@ namespace HomeBankingMindHub.Controllers
                     return NotFound("Client not found.");
                 }
 
-                // Verificar si el cliente ya tiene 3 tarjetas del tipo seleccionado
+                // Obtener el tipo y el color de la nueva tarjeta
                 var cardType = cardDTO.Type;
+                var cardColor = cardDTO.Color;
+
+                // Verificar si el cliente ya tiene una tarjeta del mismo tipo y color
+                if (client.Cards.Any(c => c.Type == cardType && c.Color == cardColor))
+                {
+                    return StatusCode(403, $"El cliente ya tiene una tarjeta de tipo {cardType} y color {cardColor}");
+                }
+
+                // Verificar si el cliente ya tiene 3 tarjetas del tipo seleccionado
                 if (client.Cards.Count(c => c.Type == cardType) >= 3)
                 {
-                    return StatusCode(403, "Client already has 3 cards of that type");
+                    return StatusCode(403, $"El cliente ya tiene 3 tarjetas de tipo {cardType}");
                 }
 
                 _clientService.CreateCardForCurrentClient(client, cardDTO);
