@@ -1,4 +1,5 @@
-﻿using HomeBankingMindHub.Models;
+﻿using HomeBankingMindHub.Data;
+using HomeBankingMindHub.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using static System.Runtime.InteropServices.JavaScript.JSType;

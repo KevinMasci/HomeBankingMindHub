@@ -1,6 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using HomeBankingMindHub.Models;
+using Microsoft.EntityFrameworkCore;
 
-namespace HomeBankingMindHub.Models
+namespace HomeBankingMindHub.Data
 {
     public class HomeBankingContext : DbContext
     {

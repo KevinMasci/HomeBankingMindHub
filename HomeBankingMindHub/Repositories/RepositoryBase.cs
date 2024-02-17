@@ -1,7 +1,7 @@
-﻿using HomeBankingMindHub.Models;
-using Microsoft.EntityFrameworkCore.Query;
+﻿using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using HomeBankingMindHub.Data;
 
 namespace HomeBankingMindHub.Repositories
 {

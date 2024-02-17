@@ -1,4 +1,4 @@
-﻿using HomeBankingMindHub.Models;
+﻿using HomeBankingMindHub.DTO;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HomeBankingMindHub.Services

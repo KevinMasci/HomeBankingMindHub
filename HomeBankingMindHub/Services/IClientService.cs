@@ -1,4 +1,5 @@
-﻿using HomeBankingMindHub.Models;
+﻿using HomeBankingMindHub.DTO;
+using HomeBankingMindHub.Models;
 
 namespace HomeBankingMindHub.Services
 {

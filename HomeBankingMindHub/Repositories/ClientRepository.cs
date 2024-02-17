@@ -1,4 +1,5 @@
-﻿using HomeBankingMindHub.Models;
+﻿using HomeBankingMindHub.Data;
+using HomeBankingMindHub.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace HomeBankingMindHub.Repositories

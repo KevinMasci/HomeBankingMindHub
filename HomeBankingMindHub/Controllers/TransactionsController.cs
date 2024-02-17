@@ -1,4 +1,4 @@
-﻿using HomeBankingMindHub.Models;
+﻿using HomeBankingMindHub.DTO;
 using HomeBankingMindHub.Repositories;
 using HomeBankingMindHub.Services;
 using Microsoft.AspNetCore.Mvc;

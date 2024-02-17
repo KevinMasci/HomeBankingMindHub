@@ -1,12 +1,13 @@
-﻿using HomeBankingMindHub.Utils;
+﻿using HomeBankingMindHub.Models;
+using HomeBankingMindHub.Utils;
 
-namespace HomeBankingMindHub.Models
+namespace HomeBankingMindHub.Data
 {
     static class DBInitializer
     {
         public static void Initialize(HomeBankingContext context)
         {
-            if(!context.Clients.Any())
+            if (!context.Clients.Any())
             {
                 var clients = new Client[]
                 {
@@ -63,9 +64,9 @@ namespace HomeBankingMindHub.Models
                     new Loan { Name = "Personal", MaxAmount = 100000, Payments = "6,12,24" },
                     new Loan { Name = "Automotriz", MaxAmount = 300000, Payments = "6,12,24,36" },
                 };
-                foreach(var loan in loans)
-                {  
-                    context.Loans.Add(loan); 
+                foreach (var loan in loans)
+                {
+                    context.Loans.Add(loan);
                 }
                 context.SaveChanges();
 
