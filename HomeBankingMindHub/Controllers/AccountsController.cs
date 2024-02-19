@@ -1,7 +1,4 @@
-﻿using HomeBankingMindHub.Models;
-using HomeBankingMindHub.Repositories;
-using HomeBankingMindHub.Services;
-using Microsoft.AspNetCore.Authorization;
+﻿using HomeBankingMindHub.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HomeBankingMindHub.Controllers
@@ -25,7 +22,7 @@ namespace HomeBankingMindHub.Controllers
                 var accountsDTO = _accountService.GetAllAccounts();
                 if (accountsDTO == null)
                 {
-                    return Forbid();
+                    return NotFound("No accounts found");
                 }
                 return Ok(accountsDTO);
             }
@@ -44,7 +41,7 @@ namespace HomeBankingMindHub.Controllers
 
                 if (account == null)
                 {
-                    return Forbid();
+                    return NotFound($"Account with ID {id} not found.");
                 }
                 return Ok(account);
             }

@@ -1,13 +1,7 @@
 ﻿using HomeBankingMindHub.DTO;
 using HomeBankingMindHub.Models;
-using HomeBankingMindHub.Repositories;
 using HomeBankingMindHub.Services;
-using HomeBankingMindHub.Utils;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.ComponentModel.DataAnnotations;
 
 namespace HomeBankingMindHub.Controllers
 {
@@ -28,6 +22,10 @@ namespace HomeBankingMindHub.Controllers
             try
             {
                 var clientsDTO = _clientService.GetAllClients();
+                if (clientsDTO == null)
+                {
+                    return NotFound("No clients found");
+                }
                 return Ok(clientsDTO);
             }
             catch (Exception ex)
@@ -45,7 +43,7 @@ namespace HomeBankingMindHub.Controllers
 
                 if (clientDTO == null)
                 {
-                    return Forbid();
+                    return NotFound($"Client with ID {id} not found.");
                 }
 
                 return Ok(clientDTO);
@@ -63,7 +61,7 @@ namespace HomeBankingMindHub.Controllers
             {
                 Client newClient = _clientService.RegisterNewClient(client);
 
-                return Created("", newClient);
+                return Ok(newClient);
             }
             catch (ArgumentException ex)
             {
@@ -87,14 +85,14 @@ namespace HomeBankingMindHub.Controllers
                 string email = User.FindFirst("Client") != null ? User.FindFirst("Client").Value : string.Empty;
                 if (email == string.Empty)
                 {
-                    return NotFound("No se ha encontrado el cliente asociado al usuario actual.");
+                    return NotFound("Client not found.");
                 }
 
                 ClientDTO clientDTO = _clientService.FindByEmail(email);
 
                 if (clientDTO == null)
                 {
-                    return NotFound("No se ha encontrado el cliente asociado al usuario actual.");
+                    return NotFound("The client associated with the current user has not been found.");
                 }
 
                 return Ok(clientDTO);
@@ -110,22 +108,25 @@ namespace HomeBankingMindHub.Controllers
         {
             try
             {
-                // Obtener el cliente actual
-                var email = User.FindFirst("Client")?.Value;
-                if (string.IsNullOrEmpty(email))
+                string email = User.FindFirst("Client") != null ? User.FindFirst("Client").Value : string.Empty;
+                if (email == string.Empty)
                 {
-                    return Forbid();
+                    return NotFound("Client not found.");
                 }
 
                 ClientDTO client = _clientService.FindByEmail(email);
 
                 if (client == null)
                 {
-                    return NotFound("No se ha encontrado el cliente asociado al usuario actual.");
+                    return NotFound("The client associated with the current user has not been found.");
                 }
 
                 _clientService.CreateAccountForClient(client.Id);
-                return Ok();
+                return Ok("Account created successfully.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
@@ -138,21 +139,24 @@ namespace HomeBankingMindHub.Controllers
         {
             try
             {
-                // Obtener el cliente actual
-                var email = User.FindFirst("Client")?.Value;
-                if (string.IsNullOrEmpty(email))
+                string email = User.FindFirst("Client") != null ? User.FindFirst("Client").Value : string.Empty;
+                if (email == string.Empty)
                 {
-                    return Forbid();
+                    return NotFound("Client not found.");
                 }
 
                 ClientDTO client = _clientService.FindByEmail(email);
 
                 if (client == null)
                 {
-                    return NotFound("No se ha encontrado el cliente asociado al usuario actual.");
+                    return NotFound("The client associated with the current user has not been found.");
                 }
 
                 var accountsDTO = _clientService.GetAccountsByCurrentClient(client.Id);
+                if (accountsDTO == null)
+                {
+                    return NotFound("The clients does not have accounts");
+                }
 
                 return Ok(accountsDTO);
             }
@@ -167,39 +171,26 @@ namespace HomeBankingMindHub.Controllers
         {
             try
             {
-                // Obtener el cliente actual
-                var email = User.FindFirst("Client")?.Value;
-                if (string.IsNullOrEmpty(email))
+                string email = User.FindFirst("Client") != null ? User.FindFirst("Client").Value : string.Empty;
+                if (email == string.Empty)
                 {
-                    return Forbid();
+                    return NotFound("Client not found.");
                 }
 
                 ClientDTO client = _clientService.FindByEmail(email);
 
                 if (client == null)
                 {
-                    return NotFound("Client not found.");
-                }
-
-                // Obtener el tipo y el color de la nueva tarjeta
-                var cardType = cardDTO.Type;
-                var cardColor = cardDTO.Color;
-
-                // Verificar si el cliente ya tiene una tarjeta del mismo tipo y color
-                if (client.Cards.Any(c => c.Type == cardType && c.Color == cardColor))
-                {
-                    return StatusCode(403, $"El cliente ya tiene una tarjeta de tipo {cardType} y color {cardColor}");
-                }
-
-                // Verificar si el cliente ya tiene 3 tarjetas del tipo seleccionado
-                if (client.Cards.Count(c => c.Type == cardType) >= 3)
-                {
-                    return StatusCode(403, $"El cliente ya tiene 3 tarjetas de tipo {cardType}");
+                    return NotFound("The client associated with the current user has not been found.");
                 }
 
                 _clientService.CreateCardForCurrentClient(client, cardDTO);
 
                 return StatusCode(201, "Card created successfully.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                return StatusCode(403, ex.Message);
             }
             catch (Exception ex)
             {
@@ -212,18 +203,17 @@ namespace HomeBankingMindHub.Controllers
         {
             try
             {
-                // Obtener el cliente actual
-                var email = User.FindFirst("Client")?.Value;
-                if (string.IsNullOrEmpty(email))
+                string email = User.FindFirst("Client") != null ? User.FindFirst("Client").Value : string.Empty;
+                if (email == string.Empty)
                 {
-                    return Forbid();
+                    return NotFound("Client not found.");
                 }
 
                 ClientDTO client = _clientService.FindByEmail(email);
 
                 if (client == null)
                 {
-                    return Forbid();
+                    return NotFound("The client associated with the current user has not been found.");
                 }
 
                 return Ok(client.Cards);

@@ -21,46 +21,7 @@ namespace HomeBankingMindHub.Services
         public IEnumerable<ClientDTO> GetAllClients()
         {
             var clients = _clientRepository.GetAllClients();
-            var clientsDTO = new List<ClientDTO>();
-
-            foreach (Client client in clients)
-            {
-                var newClientDTO = new ClientDTO
-                {
-                    Id = client.Id,
-                    Email = client.Email,
-                    FirstName = client.FirstName,
-                    LastName = client.LastName,
-                    Accounts = client.Accounts.Select(ac => new AccountDTO
-                    {
-                        Id = ac.Id,
-                        Balance = ac.Balance,
-                        CreationDate = ac.CreationDate,
-                        Number = ac.Number
-                    }).ToList(),
-                    Credits = client.ClientLoans.Select(cl => new ClientLoanDTO
-                    {
-                        Id = cl.Id,
-                        LoanId = cl.LoanId,
-                        Name = cl.Loan.Name,
-                        Amount = cl.Amount,
-                        Payments = int.Parse(cl.Payments)
-                    }).ToList(),
-                    Cards = client.Cards.Select(c => new CardDTO
-                    {
-                        Id = c.Id,
-                        CardHolder = c.CardHolder,
-                        Color = c.Color.ToString(),
-                        Cvv = c.Cvv,
-                        FromDate = c.FromDate,
-                        Number = c.Number,
-                        ThruDate = c.ThruDate,
-                        Type = c.Type.ToString(),
-                    }).ToList()
-                };
-
-                clientsDTO.Add(newClientDTO);
-            }
+            var clientsDTO = clients.Select(client => new ClientDTO(client));
             return clientsDTO;
         }
 
@@ -73,39 +34,7 @@ namespace HomeBankingMindHub.Services
                 return null;
             }
 
-            var clientDTO = new ClientDTO
-            {
-                Id = client.Id,
-                Email = client.Email,
-                FirstName = client.FirstName,
-                LastName = client.LastName,
-                Accounts = client.Accounts.Select(ac => new AccountDTO
-                {
-                    Id = ac.Id,
-                    Balance = ac.Balance,
-                    CreationDate = ac.CreationDate,
-                    Number = ac.Number
-                }).ToList(),
-                Credits = client.ClientLoans.Select(cl => new ClientLoanDTO
-                {
-                    Id = cl.Id,
-                    LoanId = cl.LoanId,
-                    Name = cl.Loan.Name,
-                    Amount = cl.Amount,
-                    Payments = int.Parse(cl.Payments)
-                }).ToList(),
-                Cards = client.Cards.Select(c => new CardDTO
-                {
-                    Id = c.Id,
-                    CardHolder = c.CardHolder,
-                    Color = c.Color.ToString(),
-                    Cvv = c.Cvv,
-                    FromDate = c.FromDate,
-                    Number = c.Number,
-                    ThruDate = c.ThruDate,
-                    Type = c.Type.ToString(),
-                }).ToList()
-            };
+            var clientDTO = new ClientDTO(client);
             return clientDTO;
         }
 
@@ -113,14 +42,14 @@ namespace HomeBankingMindHub.Services
         {
             if (String.IsNullOrEmpty(client.Email) || String.IsNullOrEmpty(client.Password) || String.IsNullOrEmpty(client.FirstName) || String.IsNullOrEmpty(client.LastName))
             {
-                throw new ArgumentException("Datos inválidos");
+                throw new ArgumentException("Invalid input");
             }
 
             Client existingUser = _clientRepository.FindByEmail(client.Email);
 
             if (existingUser != null)
             {
-                throw new InvalidOperationException("El email ya está en uso");
+                throw new InvalidOperationException("email already in use");
             }
 
             Client newClient = new Client
@@ -176,66 +105,36 @@ namespace HomeBankingMindHub.Services
                 return null;
             }
 
-            return new ClientDTO
-            {
-                Id = client.Id,
-                Email = client.Email,
-                FirstName = client.FirstName,
-                LastName = client.LastName,
-                Accounts = client.Accounts.Select(ac => new AccountDTO
-                {
-                    Id = ac.Id,
-                    Balance = ac.Balance,
-                    CreationDate = ac.CreationDate,
-                    Number = ac.Number
-                }).ToList(),
-                Credits = client.ClientLoans.Select(cl => new ClientLoanDTO
-                {
-                    Id = cl.Id,
-                    LoanId = cl.LoanId,
-                    Name = cl.Loan.Name,
-                    Amount = cl.Amount,
-                    Payments = int.Parse(cl.Payments)
-                }).ToList(),
-                Cards = client.Cards.Select(c => new CardDTO
-                {
-                    Id = c.Id,
-                    CardHolder = c.CardHolder,
-                    Color = c.Color.ToString(),
-                    Cvv = c.Cvv,
-                    FromDate = c.FromDate,
-                    Number = c.Number,
-                    ThruDate = c.ThruDate,
-                    Type = c.Type.ToString()
-                }).ToList()
-            };
+            return new ClientDTO(client);
         }
 
         public IEnumerable<AccountDTO> GetAccountsByCurrentClient(long clientId)
         {
             // Obtener cuentas del cliente
             var accounts = _accountService.GetAccountsByClient(clientId);
-            var accountsDTO = accounts.Select(account => new AccountDTO
-            {
-                Id = account.Id,
-                Number = account.Number,
-                CreationDate = account.CreationDate,
-                Balance = account.Balance,
-                Transactions = account.Transactions.Select(tr => new TransactionDTO
-                {
-                    Id = tr.Id,
-                    Type = tr.Type.ToString(),
-                    Amount = tr.Amount,
-                    Description = tr.Description,
-                    Date = tr.Date,
-                }).ToList()
-            }).ToList();
+            var accountsDTO = accounts.Select(account => new AccountDTO(account));
 
             return accountsDTO;
         }
 
         public Card CreateCardForCurrentClient(ClientDTO clientDTO, CardCreateDTO cardDTO)
         {
+            // Obtener el tipo y el color de la nueva tarjeta
+            var cardType = cardDTO.Type;
+            var cardColor = cardDTO.Color;
+
+            // Verificar si el cliente ya tiene una tarjeta del mismo tipo y color
+            if (clientDTO.Cards.Any(c => c.Type == cardType && c.Color == cardColor))
+            {
+                throw new InvalidOperationException($"El cliente ya tiene una tarjeta de tipo {cardType} y color {cardColor}");
+            }
+
+            // Verificar si el cliente ya tiene 3 tarjetas del tipo seleccionado
+            if (clientDTO.Cards.Count(c => c.Type == cardType) >= 3)
+            {
+                throw new InvalidOperationException($"El cliente ya tiene 3 tarjetas de tipo {cardType}");
+            }
+
             // Generar un numero de tarjeta y verificar que no exista
             string cardNumber;
 

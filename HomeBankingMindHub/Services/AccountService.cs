@@ -16,50 +16,14 @@ namespace HomeBankingMindHub.Services
         public AccountDTO FindById(long id)
         {
             var account = _accountRepository.FindById(id);
-            var accountDTO = new AccountDTO
-            {
-                Id = account.Id,
-                Number = account.Number,
-                CreationDate = account.CreationDate,
-                Balance = account.Balance,
-                Transactions = account.Transactions.Select(tr => new TransactionDTO
-                {
-                    Id = tr.Id,
-                    Type = tr.Type.ToString(),
-                    Amount = tr.Amount,
-                    Description = tr.Description,
-                    Date = tr.Date,
-                }).ToList()
-            };
+            var accountDTO = new AccountDTO(account);
             return accountDTO;
         }
 
         public IEnumerable<AccountDTO> GetAllAccounts()
         {
             var accounts = _accountRepository.GetAllAccounts();
-            var accountsDTO = new List<AccountDTO>();
-
-            foreach (Account account in accounts)
-            {
-                var newAccountDTO = new AccountDTO
-                {
-                    Id = account.Id,
-                    Number = account.Number,
-                    CreationDate = account.CreationDate,
-                    Balance = account.Balance,
-                    Transactions = account.Transactions.Select(tr => new TransactionDTO
-                    {
-                        Id = tr.Id,
-                        Type = tr.Type.ToString(),
-                        Amount = tr.Amount,
-                        Description = tr.Description,
-                        Date = tr.Date,
-                    }).ToList()
-                };
-
-                accountsDTO.Add(newAccountDTO);
-            }
-
+            var accountsDTO = accounts.Select(account => new AccountDTO(account));
             return accountsDTO;
         }
 
