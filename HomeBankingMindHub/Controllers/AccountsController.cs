@@ -8,7 +8,7 @@ namespace HomeBankingMindHub.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AccountsController : Controller
+    public class AccountsController : ControllerBase
     {
         private IAccountService _accountService;
 
