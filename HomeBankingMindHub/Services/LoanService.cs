@@ -28,107 +28,88 @@ namespace HomeBankingMindHub.Services
             return _loanRepository.FindById(id);
         }
 
-        public async Task<IActionResult> GetAll()
+        public IEnumerable<LoanDTO> GetAll()
         {
-            try
+            var loans = _loanRepository.GetAll();
+
+            var loanDTOs = loans.Select(loan => new LoanDTO
             {
-                // Obtener todos los préstamos
-                var loans = _loanRepository.GetAll();
+                Id = loan.Id,
+                Name = loan.Name,
+                MaxAmount = loan.MaxAmount,
+                Payments = loan.Payments
+            }).ToList();
 
-                // Verificar si hay préstamos disponibles
-                if (loans == null || !loans.Any())
-                {
-                    return new ObjectResult("No loans available") { StatusCode = 404 };
-                }
-
-                // Mapear los préstamos a DTO para enviar al cliente
-                var loanDTOs = loans.Select(loan => new LoanDTO
-                {
-                    Id = loan.Id,
-                    Name = loan.Name,
-                    MaxAmount = loan.MaxAmount,
-                    Payments = loan.Payments
-                }).ToList();
-
-                return new ObjectResult(loanDTOs) { StatusCode = 200 };
-            }
-            catch (Exception ex)
-            {
-                return new ObjectResult($"Internal server error: {ex.Message}") { StatusCode = 500 };
-            }
+            return loanDTOs;
         }
 
-        public async Task<IActionResult> RequestLoan(LoanApplicationDTO loanAppDto, string userEmail)
+        public ClientLoanDTO RequestLoan(LoanApplicationDTO loanAppDto, string userEmail)
         {
-            try
+            // Verificar que el préstamo exista
+            var loan = _loanRepository.FindById(loanAppDto.LoanId);
+            if (loan == null)
             {
-                // Validar que el usuario esté autenticado
-                if (string.IsNullOrEmpty(userEmail))
-                {
-                    return new ObjectResult("Not authenticated") { StatusCode = 403 };
-                }
-
-                // Verificar que el préstamo exista
-                var loan = _loanRepository.FindById(loanAppDto.LoanId);
-                if (loan == null)
-                {
-                    return new ObjectResult("Loan does not exist") { StatusCode = 404 };
-                }
-
-                // Verificar que el monto no sea 0 y no sobrepase el máximo autorizado
-                if (loanAppDto.Amount <= 0 || loanAppDto.Amount > loan.MaxAmount)
-                {
-                    return new ObjectResult("Invalid loan amount") { StatusCode = 400 };
-                }
-
-                // Verificar que los payments no lleguen vacíos
-                if (string.IsNullOrEmpty(loanAppDto.Payments))
-                {
-                    return new ObjectResult("Payments information is required") { StatusCode = 400 };
-                }
-
-                // Verificar que exista la cuenta de destino
-                var account = _accountRepository.GetAccountByNumber(loanAppDto.ToAccountNumber);
-                if (account == null)
-                {
-                    return new ObjectResult("Destination account does not exist") { StatusCode = 404 };
-                }
-
-                // Verificar que la cuenta de destino pertenezca al Cliente autentificado
-                var client = _clientRepository.FindByEmail(userEmail);
-                if (account.ClientId != client.Id)
-                {
-                    return new ObjectResult("Destination account does not belong to the authenticated client.") { StatusCode = 403 };
-                }
-
-                var clientLoan = new ClientLoan
-                {
-                    ClientId = client.Id,
-                    LoanId = loan.Id,
-                    Payments = loanAppDto.Payments,
-                    Amount = loanAppDto.Amount * 1.2,
-                };
-
-                _transactionRepository.Save(new Transaction
-                {
-                    Type = TransactionType.CREDIT,
-                    Amount = clientLoan.Amount,
-                    Description = $"{loan.Name} loan approved",
-                    AccountId = account.Id,
-                    Date = DateTime.Now,
-                });
-
-                account.Balance += loanAppDto.Amount;
-                _accountRepository.Save(account);
-
-                _clientLoanRepository.Save(clientLoan);
-
-                return new ObjectResult("Loan request processed successfully.") { StatusCode = 200 };
+                throw new InvalidOperationException("Loan does not exist");
             }
-            catch (Exception ex)
+
+            // Verificar que el monto no sea 0 y no sobrepase el máximo autorizado
+            if (loanAppDto.Amount <= 0 || loanAppDto.Amount > loan.MaxAmount)
             {
-                return new ObjectResult($"Internal server error: {ex.Message}") { StatusCode = 500 };
+                throw new InvalidOperationException("Invalid loan amount");
             }
+
+            // Verificar que los payments no lleguen vacíos
+            if (string.IsNullOrEmpty(loanAppDto.Payments))
+            {
+                throw new InvalidOperationException("Payments information is required");
+            }
+
+            // Verificar que exista la cuenta de destino
+            var account = _accountRepository.GetAccountByNumber(loanAppDto.ToAccountNumber);
+            if (account == null)
+            {
+                throw new InvalidOperationException("Destination account does not exist");
+            }
+
+            // Verificar que la cuenta de destino pertenezca al Cliente autentificado
+            var client = _clientRepository.FindByEmail(userEmail);
+            if (account.ClientId != client.Id)
+            {
+                throw new InvalidOperationException("Destination account does not belong to the authenticated client.");
+            }
+
+            var clientLoan = new ClientLoan
+            {
+                ClientId = client.Id,
+                LoanId = loan.Id,
+                Payments = loanAppDto.Payments,
+                Amount = loanAppDto.Amount * 1.2,
+            };
+
+            _transactionRepository.Save(new Transaction
+            {
+                Type = TransactionType.CREDIT,
+                Amount = clientLoan.Amount,
+                Description = $"{loan.Name} loan approved",
+                AccountId = account.Id,
+                Date = DateTime.Now,
+            });
+
+            account.Balance += loanAppDto.Amount;
+            _accountRepository.Save(account);
+
+            _clientLoanRepository.Save(clientLoan);
+
+            var clientLoanDTO = new ClientLoanDTO
+            {
+                Id = client.Id,
+                LoanId = loan.Id,
+                Name = loan.Name,
+                Amount = clientLoan.Amount,
+                Payments = int.Parse(loanAppDto.Payments),
+            };
+
+            return clientLoanDTO;
         }
     }
 }

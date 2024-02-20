@@ -10,6 +10,8 @@ namespace HomeBankingMindHub.DTO
         public double Amount { get; set; }
         public int Payments { get; set; }
 
+        public ClientLoanDTO() { }
+
         public ClientLoanDTO(ClientLoan clientLoan)
         {
             Id = clientLoan.Id;

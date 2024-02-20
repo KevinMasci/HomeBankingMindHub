@@ -6,8 +6,8 @@ namespace HomeBankingMindHub.Services
 {
     public interface ILoanService
     {
-        Task<IActionResult> GetAll();
+        IEnumerable<LoanDTO> GetAll();
         Loan FindById(long id);
-        Task<IActionResult> RequestLoan(LoanApplicationDTO loanAppDto, string email);
+        ClientLoanDTO RequestLoan(LoanApplicationDTO loanAppDto, string email);
     }
 }

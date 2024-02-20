@@ -16,25 +16,46 @@ namespace HomeBankingMindHub.Controllers
         }
 
         [HttpGet]
-        public async  Task<IActionResult> Get()
+        public IActionResult Get()
         {
             try
             {
-                var result = await _loanService.GetAll();
+                var loans = _loanService.GetAll();
 
-                return result;
+                // Verificar si hay préstamos disponibles
+                if (loans == null)
+                {
+                    return NotFound("No loans available");
+                }
+                return Ok(loans);
             }
             catch (Exception ex)
             {
-                return new ObjectResult($"Internal server error: {ex.Message}") { StatusCode = 500 };
+                return StatusCode(500, ex.Message);
             }
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] LoanApplicationDTO loanAppDto)
+        public IActionResult Post([FromBody] LoanApplicationDTO loanAppDto)
         {
-            string email = User.FindFirst("Client")?.Value;
-            return await _loanService.RequestLoan(loanAppDto, email);
+            try
+            {
+                string email = User.FindFirst("Client") != null ? User.FindFirst("Client").Value : string.Empty;
+                if (email == string.Empty)
+                {
+                    return NotFound("Client not found.");
+                }
+                var loanRequested = _loanService.RequestLoan(loanAppDto, email);
+                return Ok(loanRequested);
+            }
+            catch(InvalidOperationException ex)
+            {
+                return StatusCode(400, ex);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
     }
 }

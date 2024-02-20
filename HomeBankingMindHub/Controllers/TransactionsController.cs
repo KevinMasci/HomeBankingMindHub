@@ -25,14 +25,13 @@ namespace HomeBankingMindHub.Controllers
 
                 if (string.IsNullOrEmpty(email))
                 {
-                    return Forbid("Email vacío");
+                    return NotFound("Client not found.");
                 }
 
                 return _transactionService.MakeTransfer(transferDTO, email);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString()); // Imprimir la excepción completa en la consola.
                 return StatusCode(500, ex.Message);
             }
         }
