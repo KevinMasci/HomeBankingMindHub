@@ -77,7 +77,17 @@ namespace HomeBankingMindHub.Controllers
                     return StatusCode(403, "Destination account does not exists");
                 }
 
-                _transactionService.MakeTransfer(transferDTO, email);
+                if (transferDTO.Type == "own" && !(fromAccount.Client == toAccount.Client))
+                {
+                    return StatusCode(403, "Las cuentas deben pertenecer al mismo cliente");
+                }
+
+                if (transferDTO.Type == "third" && fromAccount.Client == toAccount.Client)
+                {
+                    return StatusCode(403, "Las cuentas deben pertenecer a diferentes clientes");
+                }
+
+                _transactionService.MakeTransfer(transferDTO);
 
                 return Ok("Created");
             }

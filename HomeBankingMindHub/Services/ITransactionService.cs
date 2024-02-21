@@ -5,6 +5,6 @@ namespace HomeBankingMindHub.Services
 {
     public interface ITransactionService
     {
-        IActionResult MakeTransfer(TransferDTO transferDTO, string userEmail);
+        void MakeTransfer(TransferDTO transferDTO);
     }
 }

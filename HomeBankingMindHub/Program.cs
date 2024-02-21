@@ -77,10 +77,12 @@ if (app.Environment.IsDevelopment())
 }
 app.UseStaticFiles();
 app.UseDefaultFiles();
+
 app.UseRouting();
+
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
-app.MapRazorPages();
-app.MapControllers();
+
 app.Run();
