@@ -40,18 +40,6 @@ namespace HomeBankingMindHub.Services
 
         public Client RegisterNewClient(SignupDTO client)
         {
-            if (String.IsNullOrEmpty(client.Email) || String.IsNullOrEmpty(client.Password) || String.IsNullOrEmpty(client.FirstName) || String.IsNullOrEmpty(client.LastName))
-            {
-                throw new ArgumentException("Invalid input");
-            }
-
-            Client existingUser = _clientRepository.FindByEmail(client.Email);
-
-            if (existingUser != null)
-            {
-                throw new InvalidOperationException("email already in use");
-            }
-
             Client newClient = new Client
             {
                 Email = client.Email,
@@ -70,12 +58,6 @@ namespace HomeBankingMindHub.Services
 
         public void CreateAccountForClient(long clientId)
         {
-            // Verificar si el cliente ya tiene 3 cuentas registradas
-            if (_accountService.GetAccountsByClient(clientId).Count() >= 3)
-            {
-                throw new InvalidOperationException("El cliente ya tiene 3 cuentas registradas, no se puede crear más.");
-            }
-
             var random = new Random();
             string accountNumber;
 
@@ -119,22 +101,6 @@ namespace HomeBankingMindHub.Services
 
         public Card CreateCardForCurrentClient(ClientDTO clientDTO, CardCreateDTO cardDTO)
         {
-            // Obtener el tipo y el color de la nueva tarjeta
-            var cardType = cardDTO.Type;
-            var cardColor = cardDTO.Color;
-
-            // Verificar si el cliente ya tiene una tarjeta del mismo tipo y color
-            if (clientDTO.Cards.Any(c => c.Type == cardType && c.Color == cardColor))
-            {
-                throw new InvalidOperationException($"El cliente ya tiene una tarjeta de tipo {cardType} y color {cardColor}");
-            }
-
-            // Verificar si el cliente ya tiene 3 tarjetas del tipo seleccionado
-            if (clientDTO.Cards.Count(c => c.Type == cardType) >= 3)
-            {
-                throw new InvalidOperationException($"El cliente ya tiene 3 tarjetas de tipo {cardType}");
-            }
-
             // Generar un numero de tarjeta y verificar que no exista
             string cardNumber;
 

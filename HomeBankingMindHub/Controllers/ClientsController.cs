@@ -2,6 +2,7 @@
 using HomeBankingMindHub.Models;
 using HomeBankingMindHub.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.VisualBasic;
 
 namespace HomeBankingMindHub.Controllers
 {
@@ -9,11 +10,13 @@ namespace HomeBankingMindHub.Controllers
     [ApiController]
     public class ClientsController : ControllerBase
     {
-        private IClientService _clientService;
+        private readonly IClientService _clientService;
+        private readonly IAccountService _accountService;
 
-        public ClientsController(IClientService clientService)
+        public ClientsController(IClientService clientService, IAccountService accountService)
         {
             _clientService = clientService;
+            _accountService = accountService;
         }
 
         [HttpGet]
@@ -59,17 +62,22 @@ namespace HomeBankingMindHub.Controllers
         {
             try
             {
+                // Verificar que los campos esten completos
+                if (String.IsNullOrEmpty(client.Email) || String.IsNullOrEmpty(client.Password) || String.IsNullOrEmpty(client.FirstName) || String.IsNullOrEmpty(client.LastName))
+                {
+                    return BadRequest("Invalid input");
+                }
+
+                // Verificar que el email no este en uso
+                var existingUser = _clientService.FindByEmail(client.Email);
+                if (existingUser != null)
+                {
+                    return BadRequest("email already in use");
+                }
+
                 Client newClient = _clientService.RegisterNewClient(client);
 
                 return Ok(newClient);
-            }
-            catch (ArgumentException ex)
-            {
-                return StatusCode(403, ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return StatusCode(403, ex.Message);
             }
             catch (Exception ex)
             {
@@ -114,19 +122,21 @@ namespace HomeBankingMindHub.Controllers
                     return NotFound("Client not found.");
                 }
 
-                ClientDTO client = _clientService.FindByEmail(email);
+                var client = _clientService.FindByEmail(email);
 
                 if (client == null)
                 {
                     return NotFound("The client associated with the current user has not been found.");
                 }
 
+                // Verificar si el cliente ya tiene 3 cuentas registradas
+                if (_accountService.GetAccountsByClient(client.Id).Count() >= 3)
+                {
+                    return BadRequest("The client already has 3 accounts, cannot create more.");
+                }
+
                 _clientService.CreateAccountForClient(client.Id);
                 return Ok("Account created successfully.");
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
@@ -184,13 +194,21 @@ namespace HomeBankingMindHub.Controllers
                     return NotFound("The client associated with the current user has not been found.");
                 }
 
+                // Verificar si el cliente ya tiene una tarjeta del mismo tipo y color
+                if (client.Cards.Any(c => c.Type == cardDTO.Type && c.Color == cardDTO.Color))
+                {
+                    return Forbid("Client already has a card with that tipe and color");
+                }
+
+                // Verificar si el cliente ya tiene 3 tarjetas del tipo seleccionado
+                if (client.Cards.Count(c => c.Type == cardDTO.Type) >= 3)
+                {
+                    return Forbid("Client already has 3 cards of that type");
+                }
+
                 _clientService.CreateCardForCurrentClient(client, cardDTO);
 
-                return StatusCode(201, "Card created successfully.");
-            }
-            catch (InvalidOperationException ex)
-            {
-                return StatusCode(403, ex.Message);
+                return Ok("Card created successfully.");
             }
             catch (Exception ex)
             {
