@@ -197,13 +197,13 @@ namespace HomeBankingMindHub.Controllers
                 // Verificar si el cliente ya tiene una tarjeta del mismo tipo y color
                 if (client.Cards.Any(c => c.Type == cardDTO.Type && c.Color == cardDTO.Color))
                 {
-                    return Forbid("Client already has a card with that tipe and color");
+                    return StatusCode(403, "Client already has a card with that tipe and color");
                 }
 
                 // Verificar si el cliente ya tiene 3 tarjetas del tipo seleccionado
                 if (client.Cards.Count(c => c.Type == cardDTO.Type) >= 3)
                 {
-                    return Forbid("Client already has 3 cards of that type");
+                    return StatusCode(403, "Client already has 3 cards of that type");
                 }
 
                 _clientService.CreateCardForCurrentClient(client, cardDTO);
