@@ -45,38 +45,9 @@ namespace HomeBankingMindHub.Services
 
         public ClientLoanDTO RequestLoan(LoanApplicationDTO loanAppDto, string userEmail)
         {
-            // Verificar que el préstamo exista
-            var loan = _loanRepository.FindById(loanAppDto.LoanId);
-            if (loan == null)
-            {
-                throw new InvalidOperationException("Loan does not exist");
-            }
-
-            // Verificar que el monto no sea 0 y no sobrepase el máximo autorizado
-            if (loanAppDto.Amount <= 0 || loanAppDto.Amount > loan.MaxAmount)
-            {
-                throw new InvalidOperationException("Invalid loan amount");
-            }
-
-            // Verificar que los payments no lleguen vacíos
-            if (string.IsNullOrEmpty(loanAppDto.Payments))
-            {
-                throw new InvalidOperationException("Payments information is required");
-            }
-
-            // Verificar que exista la cuenta de destino
+            var loan = FindById(loanAppDto.LoanId);
             var account = _accountRepository.GetAccountByNumber(loanAppDto.ToAccountNumber);
-            if (account == null)
-            {
-                throw new InvalidOperationException("Destination account does not exist");
-            }
-
-            // Verificar que la cuenta de destino pertenezca al Cliente autentificado
             var client = _clientRepository.FindByEmail(userEmail);
-            if (account.ClientId != client.Id)
-            {
-                throw new InvalidOperationException("Destination account does not belong to the authenticated client.");
-            }
 
             var clientLoan = new ClientLoan
             {
