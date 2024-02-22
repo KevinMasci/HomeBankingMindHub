@@ -82,5 +82,12 @@ namespace HomeBankingMindHub.Services
 
             return clientLoanDTO;
         }
+
+        public ClientLoan GetClientLoanByEmailAndType(string email, long LoanId)
+        {
+            var client = _clientRepository.FindByEmail(email);
+            var loan = _loanRepository.FindById(LoanId);
+            return _clientLoanRepository.GetClientLoanByEmailAndType(client.Id, loan.Id);
+        }
     }
 }

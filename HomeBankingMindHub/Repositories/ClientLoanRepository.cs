@@ -12,5 +12,10 @@ namespace HomeBankingMindHub.Repositories
             Create(clientLoan);
             SaveChanges();
         }
+
+        public ClientLoan GetClientLoanByEmailAndType(long clientId, long loanId) 
+        {
+            return FindByCondition(clientLoan => clientLoan.ClientId == clientId && clientLoan.LoanId == loanId).FirstOrDefault();
+        }
     }
 }

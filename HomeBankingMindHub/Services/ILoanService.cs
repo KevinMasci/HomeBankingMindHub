@@ -9,5 +9,6 @@ namespace HomeBankingMindHub.Services
         IEnumerable<LoanDTO> GetAll();
         Loan FindById(long id);
         ClientLoanDTO RequestLoan(LoanApplicationDTO loanAppDto, string email);
+        ClientLoan GetClientLoanByEmailAndType(string email, long LoanId);
     }
 }

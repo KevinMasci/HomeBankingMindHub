@@ -91,6 +91,13 @@ namespace HomeBankingMindHub.Controllers
                     return BadRequest("Destination account does not belong to the authenticated client.");
                 }
 
+                // Verificar que el cliente aun no tenga un prestamo de ese tipo
+                var existingLoan = _loanService.GetClientLoanByEmailAndType(email, loanAppDto.LoanId);
+                if (existingLoan != null)
+                {
+                    return BadRequest("The client already has a loan of this type.");
+                }
+
                 var loanRequested = _loanService.RequestLoan(loanAppDto, email);
                 return Ok(loanRequested);
             }
